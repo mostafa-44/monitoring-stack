@@ -1,0 +1,92 @@
+version: "3.9"
+
+# ── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  monitoring:
+    driver: bridge
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  prometheus_data: {}
+  grafana_data:    {}
+
+# ── Services ──────────────────────────────────────────────────────────────────
+services:
+
+  # ── 1. CSV Exporter ──────────────────────────────────────────────────────
+  csv-exporter:
+    build:
+      context: ./exporter
+      dockerfile: Dockerfile
+    container_name: csv-exporter
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data:ro          # mount CSV as read-only
+    environment:
+      CSV_PATH: /data/sales_data.csv
+      EXPORTER_PORT: "8000"
+      REFRESH_INTERVAL: "30"    # reload CSV every 30 s
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/metrics')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── 2. Prometheus ─────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.enable-lifecycle"     # allows hot-reload via POST /-/reload
+    depends_on:
+      - csv-exporter
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── 3. Grafana ────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      GF_SECURITY_ADMIN_USER:     admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP:     "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/sales_dashboard.json
+      GF_SERVER_ROOT_URL:         "http://localhost:3000"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,23 @@
+date,product,category,region,units_sold,revenue,cost,profit
+2024-01-01,Laptop Pro,Electronics,North,12,14400,9600,4800
+2024-01-01,Wireless Mouse,Accessories,North,45,1350,450,900
+2024-01-01,USB-C Hub,Accessories,South,30,1500,600,900
+2024-01-02,Laptop Pro,Electronics,South,8,9600,6400,3200
+2024-01-02,Mechanical Keyboard,Accessories,East,20,2000,800,1200
+2024-01-02,Monitor 27inch,Electronics,West,15,7500,4500,3000
+2024-01-03,Wireless Mouse,Accessories,East,60,1800,600,1200
+2024-01-03,Laptop Pro,Electronics,West,10,12000,8000,4000
+2024-01-03,USB-C Hub,Accessories,North,25,1250,500,750
+2024-01-04,Monitor 27inch,Electronics,North,18,9000,5400,3600
+2024-01-04,Mechanical Keyboard,Accessories,South,35,3500,1400,2100
+2024-01-04,Laptop Pro,Electronics,East,14,16800,11200,5600
+2024-01-05,Wireless Mouse,Accessories,West,80,2400,800,1600
+2024-01-05,Monitor 27inch,Electronics,South,22,11000,6600,4400
+2024-01-05,USB-C Hub,Accessories,East,40,2000,800,1200
+2024-01-06,Laptop Pro,Electronics,North,16,19200,12800,6400
+2024-01-06,Mechanical Keyboard,Accessories,West,28,2800,1120,1680
+2024-01-06,Wireless Mouse,Accessories,South,55,1650,550,1100
+2024-01-07,Monitor 27inch,Electronics,East,20,10000,6000,4000
+2024-01-07,USB-C Hub,Accessories,West,35,1750,700,1050
+2024-01-08,Laptop Pro,Electronics,North,20,24000,16000,8000
+2024-01-08,Mechanical Keyboard,Accessories,South,40,4000,1600,2400
