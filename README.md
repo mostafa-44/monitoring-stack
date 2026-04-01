@@ -1,161 +1,103 @@
-# 📊 Monitoring Stack — Data Engineering Course
-### Prometheus · Grafana · CSV Exporter · Docker Compose
+# 📊 Monitoring Stack (Prometheus + Grafana + ELK)
+
+## 📌 Overview
+
+This project is a complete monitoring stack built using open-source tools.
+It helps track system performance, container metrics, and logs in one place.
+
+The idea is simple: collect data → process it → visualize it.
 
 ---
 
-## 🏗️ Architecture
+## 🧱 Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Docker Network: monitoring                  │
-│                                                                     │
-│  ┌──────────────┐     scrape      ┌──────────────┐                 │
-│  │              │  ──────────────▶│              │                 │
-│  │  Prometheus  │  :9090          │ CSV Exporter │  :8000          │
-│  │              │◀── /metrics ─── │  (Python)    │                 │
-│  └──────┬───────┘                 └──────┬───────┘                 │
-│         │ datasource                     │ reads                   │
-│         ▼                                ▼                          │
-│  ┌──────────────┐                ┌──────────────┐                 │
-│  │   Grafana    │  :3000         │  sales_data  │                 │
-│  │  Dashboards  │                │   .csv       │                 │
-│  └──────────────┘                └──────────────┘                 │
-└─────────────────────────────────────────────────────────────────────┘
-```
+Metrics:
+Node Exporter / cAdvisor → Prometheus → Grafana
+
+Logs:
+Filebeat → Logstash → Elasticsearch → Kibana
 
 ---
 
-## 📁 Project Structure
+## ⚙️ Tools Used
 
-```
-monitoring-stack/
-├── docker-compose.yml              ← Orchestrates all services
-│
-├── data/
-│   └── sales_data.csv              ← Your CSV data source
-│
-├── exporter/
-│   ├── Dockerfile                  ← Python 3.11 slim image
-│   ├── requirements.txt            ← prometheus_client
-│   └── app.py                      ← Reads CSV → exposes /metrics
-│
-├── prometheus/
-│   └── prometheus.yml              ← Scrape config (15s interval)
-│
-└── grafana/
-    ├── provisioning/
-    │   ├── datasources/
-    │   │   └── prometheus.yml      ← Auto-connects Prometheus
-    │   └── dashboards/
-    │       └── dashboards.yml      ← Tells Grafana where dashboards live
-    └── dashboards/
-        └── sales_dashboard.json    ← Pre-built sales dashboard
-```
+- Prometheus → collect metrics
+- Grafana → dashboards
+- Elasticsearch → store logs
+- Logstash → process logs
+- Kibana → view logs
+- cAdvisor → container metrics
+- Node Exporter → system metrics
+- Docker Compose → run everything
 
 ---
 
-## 🚀 Quick Start
+## 🚀 How to Run
 
-### Prerequisites
-- Docker ≥ 24.x
-- Docker Compose ≥ 2.x
+Clone the repo:
 
-### 1 — Clone / copy this folder, then:
-
-```bash
+```bash id="a1b2c3"
+git clone https://github.com/mostafa-44/monitoring-stack.git
 cd monitoring-stack
-
-# Build & start all containers (first run builds the exporter image)
-docker compose up --build -d
-
-# Watch logs (optional)
-docker compose logs -f
 ```
 
-### 2 — Access the UIs
+Run the stack:
 
-| Service    | URL                        | Credentials       |
-|------------|----------------------------|-------------------|
-| Grafana    | http://localhost:3000      | admin / admin123  |
-| Prometheus | http://localhost:9090      | —                 |
-| Exporter   | http://localhost:8000/metrics | —              |
-
-### 3 — Open Grafana
-1. Go to **http://localhost:3000**
-2. Login with `admin` / `admin123`
-3. The **📊 Sales Data Monitoring** dashboard loads automatically
-
----
-
-## 📈 Exposed Metrics
-
-| Metric Name                        | Type    | Labels                          | Description                  |
-|------------------------------------|---------|----------------------------------|------------------------------|
-| `sales_total_revenue`              | Gauge   | product, region, category        | Total revenue                |
-| `sales_total_units_sold`           | Gauge   | product, region, category        | Units sold                   |
-| `sales_total_profit`               | Gauge   | product, region, category        | Total profit                 |
-| `sales_total_cost`                 | Gauge   | product, region, category        | Total cost                   |
-| `sales_profit_margin_percent`      | Gauge   | product, category                | Profit margin %              |
-| `csv_records_processed_total`      | Counter | —                                | Total CSV rows processed     |
-| `csv_last_update_timestamp`        | Gauge   | —                                | Unix timestamp of last reload|
-| `csv_load_duration_seconds`        | Summary | —                                | CSV processing duration      |
-
----
-
-## 🔍 Useful PromQL Queries (Prometheus UI)
-
-```promql
-# Total revenue across all products
-sum(sales_total_revenue)
-
-# Revenue broken down by product
-sum by (product) (sales_total_revenue)
-
-# Revenue broken down by region
-sum by (region) (sales_total_revenue)
-
-# Top product by profit
-topk(3, sum by (product) (sales_total_profit))
-
-# Profit margin per product
-sales_profit_margin_percent
-
-# How many times CSV was reloaded
-rate(csv_records_processed_total[5m])
+```bash id="d4e5f6"
+docker compose up -d
 ```
 
 ---
 
-## ♻️ Updating the CSV Data
+## 🌐 Access
 
-1. Edit `data/sales_data.csv` (add rows, change values)
-2. The exporter **automatically reloads** every 30 seconds — no restart needed
-3. Watch Prometheus pick up the new values within ~15 seconds
-
----
-
-## 🛑 Stop & Clean Up
-
-```bash
-# Stop containers (keeps volumes)
-docker compose down
-
-# Stop AND remove all data volumes
-docker compose down -v
-```
+- Grafana → http://localhost:3000
+- Prometheus → http://localhost:9090
+- Kibana → http://localhost:5601
 
 ---
 
-## 🧪 Course Concepts Demonstrated
+## 📊 What You Can Monitor
 
-| Concept                         | Where                          |
-|---------------------------------|--------------------------------|
-| **Containerization**            | All services in Docker         |
-| **Service Discovery**           | Docker DNS (service names)     |
-| **Metrics Collection**          | Prometheus scraping exporter   |
-| **Data Ingestion**              | CSV → Python → Prometheus      |
-| **Time-Series Storage**         | Prometheus TSDB (7-day window) |
-| **Visualization**               | Grafana dashboards             |
-| **Health Checks**               | docker-compose healthcheck     |
-| **Configuration as Code**       | All provisioned via YAML       |
-| **Observability Pipeline**      | Exporter → Prometheus → Grafana|
+- CPU / Memory usage
+- Docker containers
+- Logs and errors
+- System performance
+
+---
+
+## 📸 Screenshots
+
+### Grafana Dashboard
+
+![dashboard](image.png)
+
+### Prometheus Queries
+
+![alt text](image-1.png)
+
+### Architecture
+
+![alt text](image-2.png)
+
+---
+
+## 💡 Notes
+
+- The stack runs بالكامل باستخدام Docker
+- Easy to start with one command
+- Can be extended لأي system أو application
+
+---
+
+## 🔧 Future Improvements
+
+- Add alerts using Alertmanager
+- Move to Kubernetes
+- Add real application monitoring
+
+---
+
+## 👤 Author
+
+Mostafa Atef
