@@ -70,15 +70,15 @@ docker compose up -d
 
 ### Grafana Dashboard
 
-![dashboard](image.png)
+![dashboard](images/image.png)
 
 ### Prometheus Queries
 
-![alt text](image-1.png)
+![prometheus](images/image-1.png)
 
 ### Architecture
 
-![alt text](image-2.png)
+![Architecture](images/image-2.png)
 
 ---
 
